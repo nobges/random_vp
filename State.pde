@@ -1,6 +1,7 @@
 class State extends VideoPlayerListener {
 
   public String name;
+  public PVector position;
   public color my_color;
   ArrayList<Link> links;
   float total_chance;
@@ -22,12 +23,13 @@ class State extends VideoPlayerListener {
     total_chance = 0;
     this.vid_play = vid_play;
     cueId = i;
+    position = new PVector();
     //vid_play.activateCue(cue);
     //addlink(this, 1.0);
   }
 
   public void activateCue() {
-    println("State.activateCue " + cueId + " " + name);
+    // println("State.activateCue " + cueId + " " + name);
     vid_play.activateCue(cueId, this);
   }
 
@@ -43,13 +45,14 @@ class State extends VideoPlayerListener {
     }
 
     float r = random( 0, total_chance );
-    println( r + " / " + total_chance );
+    // println( r + " / " + total_chance );
     float c = 0;
     for ( Link l : links ) {
       c += l.chance;
       if ( c > r ) {
         State s = l.getTarget() ;
         s.activateCue();
+        currentState = s;
         return s;
       }
     }
