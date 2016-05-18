@@ -15,6 +15,7 @@ public class VideoPlayer extends Thread {
   private float duration;
   private boolean playing;
   private boolean verify_time_in;
+  private boolean jump_request;
 
   private VideoCue current_cue;
   private VideoPlayerListener listener;
@@ -25,6 +26,7 @@ public class VideoPlayer extends Thread {
     running = false;
     playing = false;
     verify_time_in = false;
+    jump_request = false;
     runtime = 0;
     this.parent = parent;  
     this.path = path;
@@ -103,8 +105,7 @@ public class VideoPlayer extends Thread {
           long deltatime = System.currentTimeMillis() - runtime;
           
           if ( current_cue == null ) {
-            // normal playhead
-            // 					System.out.println( mov.time() + " / " + duration );
+
           } else {
             
             if ( mov.isLoaded()  || mov.isModified() ) {
@@ -112,20 +113,21 @@ public class VideoPlayer extends Thread {
               float t = mov.time();
               float cs = current_cue.getSpeed();
 
-              if ( verify_time_in ) {
-                System.err.println( "run() " + verify_time_in + ", time: " + t + ", cue in: " + current_cue.getTimein() );
-              }
+              //if ( verify_time_in ) {
+              //  System.err.println( "run() " + verify_time_in + ", time: " + t + ", cue in: " + current_cue.getTimein() );
+              //}
 
               if ( 
-                t < current_cue.getTimein() ||
-                verify_time_in
+                ( t < current_cue.getTimein() || verify_time_in ) &&
+                !jump_request
                 ) {
               
-                System.err.println( "not good, let's jump to " + current_cue.getTimein() + " <> " + t + " verify? " + verify_time_in  );
+                //System.err.println( "not good, let's jump to " + current_cue.getTimein() + " <> " + t + " verify? " + verify_time_in  );
                 mov.jump( current_cue.getTimein() );
                 if ( cs < 0 ) current_cue.setSpeed( cs * -1 );
                 mov.speed( current_cue.getSpeed() );
                 verify_time_in = false;
+                jump_request = true;
               
               } else if ( !verify_time_in && t >= current_cue.getTimeout() ) {
                 
@@ -137,6 +139,7 @@ public class VideoPlayer extends Thread {
               } else if ( t >= current_cue.getTimein() && t < current_cue.getTimeout() ) {
                 
                 verify_time_in = false;
+                jump_request = false;
                 
               }
               
@@ -157,7 +160,7 @@ public class VideoPlayer extends Thread {
       
       try {
         
-        Thread.sleep( 20 );
+        Thread.sleep( 2 );
       
       } catch (InterruptedException e) {
         
@@ -186,11 +189,11 @@ public class VideoPlayer extends Thread {
       current_cue =null;
       return true;
     }
-    parent.println("VideoPlayer.activateCue " + i);
+    // parent.println("VideoPlayer.activateCue " + i);
     if ( i >= cues.size() ) return false;
     current_cue = cues.get( i );
     verify_time_in = true;
-    System.err.println( "verify_time_in" );
+    //System.err.println( "verify_time_in" );
     return true;
   }
 
